@@ -1,5 +1,5 @@
 /**
- * weapp.qrcode.js v1.0.0 (https://github.com/yingye/weapp-qrcode#readme)
+ * weapp.qrcode.js v2.0.1 (https://github.com/gexin1/weapp-qrcode#readme)
  */
 
 (function (global, factory) {
@@ -7,122 +7,6 @@
 	typeof define === 'function' && define.amd ? define(factory) :
 	(global.drawQrcode = factory());
 }(this, (function () { 'use strict';
-
-var hasOwn = Object.prototype.hasOwnProperty;
-var toStr = Object.prototype.toString;
-var defineProperty = Object.defineProperty;
-var gOPD = Object.getOwnPropertyDescriptor;
-
-var isArray = function isArray(arr) {
-	if (typeof Array.isArray === 'function') {
-		return Array.isArray(arr);
-	}
-
-	return toStr.call(arr) === '[object Array]';
-};
-
-var isPlainObject = function isPlainObject(obj) {
-	if (!obj || toStr.call(obj) !== '[object Object]') {
-		return false;
-	}
-
-	var hasOwnConstructor = hasOwn.call(obj, 'constructor');
-	var hasIsPrototypeOf = obj.constructor && obj.constructor.prototype && hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
-	// Not own constructor property must be Object
-	if (obj.constructor && !hasOwnConstructor && !hasIsPrototypeOf) {
-		return false;
-	}
-
-	// Own properties are enumerated firstly, so to speed up,
-	// if last one is own, then all properties are own.
-	var key;
-	for (key in obj) { /**/ }
-
-	return typeof key === 'undefined' || hasOwn.call(obj, key);
-};
-
-// If name is '__proto__', and Object.defineProperty is available, define __proto__ as an own property on target
-var setProperty = function setProperty(target, options) {
-	if (defineProperty && options.name === '__proto__') {
-		defineProperty(target, options.name, {
-			enumerable: true,
-			configurable: true,
-			value: options.newValue,
-			writable: true
-		});
-	} else {
-		target[options.name] = options.newValue;
-	}
-};
-
-// Return undefined instead of __proto__ if '__proto__' is not an own property
-var getProperty = function getProperty(obj, name) {
-	if (name === '__proto__') {
-		if (!hasOwn.call(obj, name)) {
-			return void 0;
-		} else if (gOPD) {
-			// In early versions of node, obj['__proto__'] is buggy when obj has
-			// __proto__ as an own property. Object.getOwnPropertyDescriptor() works.
-			return gOPD(obj, name).value;
-		}
-	}
-
-	return obj[name];
-};
-
-var extend = function extend() {
-	var options, name, src, copy, copyIsArray, clone;
-	var target = arguments[0];
-	var i = 1;
-	var length = arguments.length;
-	var deep = false;
-
-	// Handle a deep copy situation
-	if (typeof target === 'boolean') {
-		deep = target;
-		target = arguments[1] || {};
-		// skip the boolean and the target
-		i = 2;
-	}
-	if (target == null || (typeof target !== 'object' && typeof target !== 'function')) {
-		target = {};
-	}
-
-	for (; i < length; ++i) {
-		options = arguments[i];
-		// Only deal with non-null/undefined values
-		if (options != null) {
-			// Extend the base object
-			for (name in options) {
-				src = getProperty(target, name);
-				copy = getProperty(options, name);
-
-				// Prevent never-ending loop
-				if (target !== copy) {
-					// Recurse if we're merging plain objects or arrays
-					if (deep && copy && (isPlainObject(copy) || (copyIsArray = isArray(copy)))) {
-						if (copyIsArray) {
-							copyIsArray = false;
-							clone = src && isArray(src) ? src : [];
-						} else {
-							clone = src && isPlainObject(src) ? src : {};
-						}
-
-						// Never move original objects, clone them
-						setProperty(target, { name: name, newValue: extend(deep, clone, copy) });
-
-					// Don't bring in undefined values
-					} else if (typeof copy !== 'undefined') {
-						setProperty(target, { name: name, newValue: copy });
-					}
-				}
-			}
-		}
-	}
-
-	// Return the modified object
-	return target;
-};
 
 //---------------------------------------------------------------------
 // QRCode for JavaScript
@@ -1196,15 +1080,15 @@ function utf16to8(str) {
   len = str.length;
   for (i = 0; i < len; i++) {
     c = str.charCodeAt(i);
-    if (c >= 0x0001 && c <= 0x007F) {
+    if (c >= 0x0001 && c <= 0x007f) {
       out += str.charAt(i);
-    } else if (c > 0x07FF) {
-      out += String.fromCharCode(0xE0 | c >> 12 & 0x0F);
-      out += String.fromCharCode(0x80 | c >> 6 & 0x3F);
-      out += String.fromCharCode(0x80 | c >> 0 & 0x3F);
+    } else if (c > 0x07ff) {
+      out += String.fromCharCode(0xe0 | c >> 12 & 0x0f);
+      out += String.fromCharCode(0x80 | c >> 6 & 0x3f);
+      out += String.fromCharCode(0x80 | c >> 0 & 0x3f);
     } else {
-      out += String.fromCharCode(0xC0 | c >> 6 & 0x1F);
-      out += String.fromCharCode(0x80 | c >> 0 & 0x3F);
+      out += String.fromCharCode(0xc0 | c >> 6 & 0x1f);
+      out += String.fromCharCode(0x80 | c >> 0 & 0x3f);
     }
   }
   return out;
@@ -1212,7 +1096,7 @@ function utf16to8(str) {
 
 function drawQrcode(options) {
   options = options || {};
-  options = extend(true, {
+  options = Object.assign({
     width: 256,
     height: 256,
     x: 0,
@@ -1230,8 +1114,8 @@ function drawQrcode(options) {
     }
   }, options);
 
-  if (!options.canvasId && !options.ctx) {
-    console.warn('please set canvasId or ctx!');
+  if (!options.ctx) {
+    console.warn('please set ctx!');
     return;
   }
 
@@ -1243,13 +1127,7 @@ function drawQrcode(options) {
     qrcode.addData(utf16to8(options.text));
     qrcode.make();
 
-    // get canvas context
-    var ctx;
-    if (options.ctx) {
-      ctx = options.ctx;
-    } else {
-      ctx = options._this ? wx.createCanvasContext && wx.createCanvasContext(options.canvasId, options._this) : wx.createCanvasContext && wx.createCanvasContext(options.canvasId);
-    }
+    var ctx = options.ctx;
 
     // compute tileW/tileH based on options.width/options.height
     var tileW = options.width / qrcode.getModuleCount();
@@ -1259,7 +1137,8 @@ function drawQrcode(options) {
     for (var row = 0; row < qrcode.getModuleCount(); row++) {
       for (var col = 0; col < qrcode.getModuleCount(); col++) {
         var style = qrcode.isDark(row, col) ? options.foreground : options.background;
-        ctx.setFillStyle(style);
+        ctx.fillStyle = style;
+
         var w = Math.ceil((col + 1) * tileW) - Math.floor(col * tileW);
         var h = Math.ceil((row + 1) * tileW) - Math.floor(row * tileW);
         ctx.fillRect(Math.round(col * tileW) + options.x, Math.round(row * tileH) + options.y, w, h);
@@ -1270,9 +1149,8 @@ function drawQrcode(options) {
       ctx.drawImage(options.image.imageResource, options.image.dx, options.image.dy, options.image.dWidth, options.image.dHeight);
     }
 
-    ctx.draw(false, function (e) {
-      options.callback && options.callback(e);
-    });
+    // 如果绘制完成就调用回调函数
+    options.callback && options.callback();
   }
 }
 

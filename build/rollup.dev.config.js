@@ -15,10 +15,6 @@ module.exports = {
       file: path.resolve(__dirname, '../dist/weapp.qrcode.js'),
       format: 'umd'
     },
-    {
-      file: path.resolve(__dirname, '../examples/wechat-app/utils/weapp.qrcode.js'),
-      format: 'umd'
-    }
   ],
   moduleName: 'drawQrcode',
   plugins: [

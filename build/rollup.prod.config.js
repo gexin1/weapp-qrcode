@@ -40,7 +40,7 @@ module.exports = {
     uglify({
       compress: {
         // 'drop_console': true
-      }  
+      }
     }),
     license({
       banner: 'weapp.qrcode.js v' + pkg.version + ' (' + pkg.homepage + ')'
