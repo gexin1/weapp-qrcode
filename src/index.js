@@ -1,5 +1,5 @@
 import { QRCode, QRErrorCorrectLevel } from './qrcode'
-
+import merge from 'lodash.merge'
 // support Chinese
 function utf16to8 (str) {
   var out, i, len, c
@@ -23,7 +23,7 @@ function utf16to8 (str) {
 
 function drawQrcode (options) {
   options = options || {}
-  options = Object.assign(
+  options = merge(
     {
       width: 256,
       height: 256,
