@@ -1,94 +1,100 @@
-import extend from 'extend'
-import {
-  QRCode,
-  QRErrorCorrectLevel
-} from './qrcode'
+import deepmerge from "deepmerge";
+import { QRCode, QRErrorCorrectLevel } from "./qrcode";
 
 // support Chinese
-function utf16to8 (str) {
-  var out, i, len, c
-  out = ''
-  len = str.length
+function utf16to8(str) {
+  var out, i, len, c;
+  out = "";
+  len = str.length;
   for (i = 0; i < len; i++) {
-    c = str.charCodeAt(i)
-    if ((c >= 0x0001) && (c <= 0x007F)) {
-      out += str.charAt(i)
-    } else if (c > 0x07FF) {
-      out += String.fromCharCode(0xE0 | ((c >> 12) & 0x0F))
-      out += String.fromCharCode(0x80 | ((c >> 6) & 0x3F))
-      out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F))
+    c = str.charCodeAt(i);
+    if (c >= 0x0001 && c <= 0x007f) {
+      out += str.charAt(i);
+    } else if (c > 0x07ff) {
+      out += String.fromCharCode(0xe0 | ((c >> 12) & 0x0f));
+      out += String.fromCharCode(0x80 | ((c >> 6) & 0x3f));
+      out += String.fromCharCode(0x80 | ((c >> 0) & 0x3f));
     } else {
-      out += String.fromCharCode(0xC0 | ((c >> 6) & 0x1F))
-      out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F))
+      out += String.fromCharCode(0xc0 | ((c >> 6) & 0x1f));
+      out += String.fromCharCode(0x80 | ((c >> 0) & 0x3f));
     }
   }
-  return out
+  return out;
 }
 
-function drawQrcode (options) {
-  options = options || {}
-  options = extend(true, {
-    width: 256,
-    height: 256,
-    x: 0,
-    y: 0,
-    typeNumber: -1,
-    correctLevel: QRErrorCorrectLevel.H,
-    background: '#ffffff',
-    foreground: '#000000',
-    image: {
-      imageResource: '',
-      dx: 0,
-      dy: 0,
-      dWidth: 100,
-      dHeight: 100
-    }
-  }, options)
+function drawQrcode(options) {
+  options = options || {};
+  options = deepmerge(
+    {
+      width: 256,
+      height: 256,
+      x: 0,
+      y: 0,
+      typeNumber: -1,
+      correctLevel: QRErrorCorrectLevel.H,
+      background: "#ffffff",
+      foreground: "#000000",
+      image: {
+        imageResource: "",
+        dx: 0,
+        dy: 0,
+        dWidth: 100,
+        dHeight: 100,
+      },
+    },
+    options
+  );
 
-  if (!options.canvasId && !options.ctx) {
-    console.warn('please set canvasId or ctx!')
-    return
+  if (!options.ctx) {
+    console.warn("please set ctx!");
+    return;
   }
 
-  createCanvas()
+  createCanvas();
 
-  function createCanvas () {
+  function createCanvas() {
     // create the qrcode itself
-    var qrcode = new QRCode(options.typeNumber, options.correctLevel)
-    qrcode.addData(utf16to8(options.text))
-    qrcode.make()
+    var qrcode = new QRCode(options.typeNumber, options.correctLevel);
+    qrcode.addData(utf16to8(options.text));
+    qrcode.make();
 
-    // get canvas context
-    var ctx
-    if (options.ctx) {
-      ctx = options.ctx
-    } else {
-      ctx = options._this ? wx.createCanvasContext && wx.createCanvasContext(options.canvasId, options._this) : wx.createCanvasContext && wx.createCanvasContext(options.canvasId)
-    }
+    var ctx = options.ctx;
 
     // compute tileW/tileH based on options.width/options.height
-    var tileW = options.width / qrcode.getModuleCount()
-    var tileH = options.height / qrcode.getModuleCount()
+    var tileW = options.width / qrcode.getModuleCount();
+    var tileH = options.height / qrcode.getModuleCount();
 
     // draw in the canvas
     for (var row = 0; row < qrcode.getModuleCount(); row++) {
       for (var col = 0; col < qrcode.getModuleCount(); col++) {
-        var style = qrcode.isDark(row, col) ? options.foreground : options.background
-        ctx.setFillStyle(style)
-        var w = (Math.ceil((col + 1) * tileW) - Math.floor(col * tileW))
-        var h = (Math.ceil((row + 1) * tileW) - Math.floor(row * tileW))
-        ctx.fillRect(Math.round(col * tileW) + options.x, Math.round(row * tileH) + options.y, w, h)
+        var style = qrcode.isDark(row, col)
+          ? options.foreground
+          : options.background;
+        ctx.fillStyle(style);
+        var w = Math.ceil((col + 1) * tileW) - Math.floor(col * tileW);
+        var h = Math.ceil((row + 1) * tileW) - Math.floor(row * tileW);
+        ctx.fillRect(
+          Math.round(col * tileW) + options.x,
+          Math.round(row * tileH) + options.y,
+          w,
+          h
+        );
       }
     }
 
     if (options.image.imageResource) {
-      ctx.drawImage(options.image.imageResource, options.image.dx, options.image.dy, options.image.dWidth, options.image.dHeight)
+      ctx.drawImage(
+        options.image.imageResource,
+        options.image.dx,
+        options.image.dy,
+        options.image.dWidth,
+        options.image.dHeight
+      );
     }
 
-    ctx.draw(false, function (e) {
-      options.callback && options.callback(e)
-    })
+    // 如果绘制完成就调用回调函数
+    options.callback && options.callback(e);
   }
 }
 
-export default drawQrcode
+export default drawQrcode;
